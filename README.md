@@ -34,3 +34,22 @@ before running it on the CNC controller. Confirm the machine, stock, tooling,
 workholding, origin, units, and program type before machining. This repository
 is an output archive, not a substitute for the operator's normal verification
 process.
+
+## CNC Controller Setup
+
+Clone this repository once on the computer that controls the CNC machine:
+
+```bash
+git clone https://github.com/yuvanshankar30/output.git
+cd output
+```
+
+Before using new output, update the local checkout:
+
+```bash
+cd /path/to/output
+git fetch origin
+git pull --ff-only origin main
+```
+
+Run the update only when the machine is in a safe state and no program is actively running. If the pull cannot be fast-forwarded, stop and resolve the checkout manually rather than overwriting local files.
