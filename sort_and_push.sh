@@ -45,7 +45,11 @@ cd "$REPO_DIR"
 # landed before that took effect.
 find "$REPO_DIR" -name ".DS_Store" -not -path "*/.git/*" -delete
 
-TODAY=$(date +%Y%m%d)
+# Hardcoded to Pacific time regardless of this machine's own system
+# timezone (e.g. a laptop that travels to an out-of-region competition) -
+# TZ handles the PST/PDT switch automatically via the IANA database, so
+# this never needs updating for daylight saving.
+TODAY=$(TZ="America/Los_Angeles" date +%Y%m%d)
 moved=()
 
 # Real gcode output can land at the repo root or directly in
