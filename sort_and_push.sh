@@ -36,9 +36,12 @@ find "$REPO_DIR" -name ".DS_Store" -not -path "*/.git/*" -delete
 TODAY=$(date +%Y%m%d)
 moved=()
 
-# Real files can land at the repo root or directly in JustinProgOutput/ -
-# either way they belong in today's dated folder. Dotfiles (.DS_Store,
-# .gitignore, etc.) are never swept up.
+# Real gcode output can land at the repo root or directly in
+# JustinProgOutput/ - either way it belongs in today's dated folder.
+# Restricted to .ngc/.tap specifically (same convention $lib/jprog_output.js
+# already enforces app-side) - NEVER sweep up arbitrary repo-root files
+# like README.md or this script itself, which live at the repo root
+# permanently and are not "dropped output."
 for scan_dir in "$REPO_DIR" "$DROP_DIR"; do
   [ -d "$scan_dir" ] || continue
   while IFS= read -r -d '' file; do
@@ -51,7 +54,7 @@ for scan_dir in "$REPO_DIR" "$DROP_DIR"; do
     mv "$file" "$dest"
     moved+=("$base")
     log "Moved $base -> ${dest#$REPO_DIR/}"
-  done < <(find "$scan_dir" -maxdepth 1 -type f ! -name ".*" -print0)
+  done < <(find "$scan_dir" -maxdepth 1 -type f \( -iname "*.ngc" -o -iname "*.tap" \) -print0)
 done
 
 # Mirror a local delete of a tracked .ngc/.tap file under JustinProgOutput/
