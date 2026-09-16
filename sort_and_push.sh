@@ -4,11 +4,19 @@
 # moves each into JustinProgOutput/<today's date>/ to match the existing
 # convention, then commits and pushes.
 #
-# Also mirrors LOCAL RENAMES under JustinProgOutput/ to GitHub, but never
-# mirrors a plain local DELETE - deleting a file here only removes the
-# local copy; git's own content-similarity detection (git diff -M) is what
-# tells a genuine rename (paired delete+add of the same content) apart from
-# a standalone delete, which gets restored instead of ever reaching GitHub.
+# Also mirrors LOCAL RENAMES and LOCAL DELETES of .ngc/.tap files under
+# JustinProgOutput/ to GitHub - git's own content-similarity detection
+# (git diff -M) is what tells a genuine rename (paired delete+add of the
+# same content) apart from a standalone delete. Deleting anything else
+# (a non-gcode file that isn't already OS-protected, see below) is
+# restored instead of ever reaching GitHub - protects against removing
+# something unexpected from the real repo.
+#
+# README.md and this script are additionally locked with macOS's own
+# immutable flag (chflags uchg) so they can't be deleted - or edited -
+# locally at all, a stronger guarantee than anything this script itself
+# can provide. Run `chflags nouchg README.md sort_and_push.sh` first if
+# either ever needs to change, then `chflags uchg` them again after.
 #
 # Triggered by a launchd LaunchAgent (WatchPaths) - see
 # com.spartans.jprog-output-sort.plist.
@@ -70,15 +78,24 @@ if git diff --cached --quiet -- "$DROP_DIR"; then
   exit 0
 fi
 
-# A standalone delete (not part of a detected rename) must never reach
-# GitHub - restore it so the local copy comes back too, keeping this
-# machine's folder and the repo in sync rather than silently diverging.
+# A standalone delete (not part of a detected rename) of a .ngc/.tap file
+# is a real, intentional delete - sync it to GitHub. Anything else that
+# went missing (a non-gcode file not already OS-locked, see above) is
+# restored instead, so an unexpected file type can never quietly
+# disappear from the real repo.
+deleted=()
 restored=()
 while IFS=$'\t' read -r status path; do
   [ "$status" = "D" ] || continue
-  git restore --staged --worktree -- "$path"
-  restored+=("$path")
-  log "Restored $path (local deletes never delete from GitHub)"
+  ext_lower=$(printf '%s' "${path##*.}" | tr '[:upper:]' '[:lower:]')
+  if [ "$ext_lower" = "ngc" ] || [ "$ext_lower" = "tap" ]; then
+    deleted+=("$path")
+    log "Deleting $path (gcode file removed locally)"
+  else
+    git restore --staged --worktree -- "$path"
+    restored+=("$path")
+    log "Restored $path (only .ngc/.tap deletions sync to GitHub)"
+  fi
 done < <(git diff --cached --name-status -M -- "$DROP_DIR")
 
 if git diff --cached --quiet -- "$DROP_DIR"; then
@@ -86,11 +103,12 @@ if git diff --cached --quiet -- "$DROP_DIR"; then
   exit 0
 fi
 
-# Build the commit message from what's actually staged (adds/renames),
-# not just what this run happened to move - a manual git mv done outside
-# this script gets swept in here too.
+# Build the commit message from what's actually staged (adds/renames/
+# deletes), not just what this run happened to move - a manual git mv or
+# rm done outside this script gets swept in here too.
 summary=$(git diff --cached --name-status -M -- "$DROP_DIR" | awk -F'\t' '
   $1=="A"{printf "Add %s; ", $2}
+  $1=="D"{printf "Delete %s; ", $2}
   $1 ~ /^R/{printf "Rename %s -> %s; ", $2, $3}
 ' | sed 's/; $//')
 message="${summary:-Update JustinProgOutput}"
