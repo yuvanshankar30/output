@@ -14,7 +14,7 @@
 # com.spartans.jprog-output-sort.plist.
 set -euo pipefail
 
-REPO_DIR="/Users/yuvan/output"
+REPO_DIR="/Users/yuvan/Output"
 DROP_DIR="$REPO_DIR/JustinProgOutput"
 LOG_FILE="/tmp/jprog-output-sort.log"
 LOCK_DIR="/tmp/jprog-output-sort.lock"
