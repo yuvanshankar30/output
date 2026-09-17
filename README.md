@@ -76,7 +76,7 @@ triggered two ways:
 - **`WatchPaths`** - fires the moment something changes on disk under
   `/Users/yuvan/Output` or `/Users/yuvan/Output/JustinProgOutput` (e.g.
   JustinProg or this script's own previous run dropping a file there).
-- **`StartInterval`** - also fires on a 2-minute timer regardless of local
+- **`StartInterval`** - also fires on a 30-second timer regardless of local
   activity, since a change made *only* on GitHub (via the web editor)
   never touches this machine's disk and so would never trip `WatchPaths`
   on its own.

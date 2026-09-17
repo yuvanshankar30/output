@@ -9,7 +9,7 @@
 # commits straight to GitHub - show up on this machine too, not just the
 # other direction. WatchPaths alone only fires on local disk activity, so
 # a remote-only change (nobody touched this machine) would otherwise never
-# trigger a pull; see the periodic StartInterval trigger in
+# trigger a pull; see the periodic (30s) StartInterval trigger in
 # com.spartans.jprog-output-sort.plist, added for exactly that case.
 #
 # Also mirrors LOCAL RENAMES and LOCAL DELETES of .ngc/.tap files under
